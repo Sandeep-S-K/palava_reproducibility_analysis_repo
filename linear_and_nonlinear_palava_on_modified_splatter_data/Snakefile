@@ -1,6 +1,6 @@
 
 '''
-yYou will need to set up two conda environment  "scvi-palava-development-env" (with palava) and  "r-env-seurat" (with the spatter R package provided in the repo). You will need to change the conda names in the code below to the names of the environements you created.
+You will need to set up two conda environment  "scvi-palava-development-env" (with palava) and  "r-env-seurat" (with the spatter R package provided in the repo). You will need to change the conda names in the code below to the names of the environements you created.
 
 
 snakemake command to run the code "snakemake --profile slurm --use-conda --rerun-triggers mtime".
