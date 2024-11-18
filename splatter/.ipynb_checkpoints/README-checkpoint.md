@@ -2,7 +2,7 @@
 
 
 ## installation 
-- Clone this locally and install using devtools in a conda environment 
+- Clone this locally and install using devtools 
 
 
 ## Citing Splatter

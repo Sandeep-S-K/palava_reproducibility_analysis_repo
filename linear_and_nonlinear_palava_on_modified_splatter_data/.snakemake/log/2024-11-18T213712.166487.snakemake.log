@@ -1,0 +1,96 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cluster nodes: 50
+Job stats:
+job                              count    min threads    max threads
+-----------------------------  -------  -------------  -------------
+add_gene_sets_adata_excessive        1              1              1
+gen_sim_data                         1              1              1
+not_all                              1              1              1
+run_linear_palava                    1              1              1
+run_palava                           1              1              1
+total                                5              1              1
+
+Select jobs to execute...
+
+[Mon Nov 18 21:37:12 2024]
+rule gen_sim_data:
+    output: data/sim_anndata_5000_cells_2000_genes_4_factors_0_seed.h5ad
+    jobid: 3
+    reason: Missing output files: data/sim_anndata_5000_cells_2000_genes_4_factors_0_seed.h5ad
+    wildcards: cells=5000, genes=2000, factors=4, seed=0
+    resources: mem_mb=5000, mem_mib=4769, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, cpus=1, runtime=200, gres=gpu:0, account=punim0614, partition=cascade,mig, output_dr=Out_files/rule_gen_sim_data%x.%j.out, job_name=gen_sim_data
+
+
+        Rscript --vanilla gen_anndata.R 5000 2000 4 0
+        
+Submitted job 3 with external jobid 'Submitted batch job 1730212'.
+[Mon Nov 18 21:38:47 2024]
+Finished job 3.
+1 of 5 steps (20%) done
+Select jobs to execute...
+
+[Mon Nov 18 21:38:47 2024]
+rule add_gene_sets_adata_excessive:
+    input: data/sim_anndata_5000_cells_2000_genes_4_factors_0_seed.h5ad
+    output: data/sim_anndata_5000_cells_2000_genes_4_factors_0_seed_gene_sets_formatted_MS_0_EX_0.h5ad
+    jobid: 2
+    reason: Missing output files: data/sim_anndata_5000_cells_2000_genes_4_factors_0_seed_gene_sets_formatted_MS_0_EX_0.h5ad; Input files updated by another job: data/sim_anndata_5000_cells_2000_genes_4_factors_0_seed.h5ad
+    wildcards: cells=5000, genes=2000, factors=4, seed=0, ms=0, ex=0
+    resources: mem_mb=10000, mem_mib=9537, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, cpus=1, runtime=200, gres=gpu:0, account=punim0614, partition=cascade,mig, output_dr=Out_files/adding_gene_sets_adata_%x.%j.out, job_name=adding_gen_sets_adata
+
+
+        python add_gene_sets_adata_excessive.py --data_directory='data/sim_anndata_5000_cells_2000_genes_4_factors_0_seed.h5ad' --MS=0 --EX=0
+        
+Submitted job 2 with external jobid 'Submitted batch job 1730246'.
+[Mon Nov 18 21:39:44 2024]
+Finished job 2.
+2 of 5 steps (40%) done
+Select jobs to execute...
+
+[Mon Nov 18 21:39:44 2024]
+rule run_linear_palava:
+    input: data/sim_anndata_5000_cells_2000_genes_4_factors_0_seed_gene_sets_formatted_MS_0_EX_0.h5ad
+    output: intermediate_results/linear_palava_results_sim_anndata_5000_cells_2000_genes_4_factors_0_seed_gene_sets_formatted_MS_0_EX_0.npy
+    jobid: 1
+    reason: Missing output files: intermediate_results/linear_palava_results_sim_anndata_5000_cells_2000_genes_4_factors_0_seed_gene_sets_formatted_MS_0_EX_0.npy; Input files updated by another job: data/sim_anndata_5000_cells_2000_genes_4_factors_0_seed_gene_sets_formatted_MS_0_EX_0.h5ad
+    wildcards: cells=5000, genes=2000, factors=4, seed=0, error_str=MS_0_EX_0
+    resources: mem_mb=50000, mem_mib=47684, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, cpus=1, runtime=30, gres=gpu:1, account=punim0614, partition=gpu-a100,gpu-a100-short, output_dr=Out_files/linear_no_bias_%x.%j.out, job_name=linear_palava
+
+
+        python run_linear_palava.py --data_directory='data/sim_anndata_5000_cells_2000_genes_4_factors_0_seed_gene_sets_formatted_MS_0_EX_0.h5ad'
+        
+Submitted job 1 with external jobid 'Submitted batch job 1730268'.
+
+[Mon Nov 18 21:39:44 2024]
+rule run_palava:
+    input: data/sim_anndata_5000_cells_2000_genes_4_factors_0_seed_gene_sets_formatted_MS_0_EX_0.h5ad
+    output: intermediate_results/palava_results_sim_anndata_5000_cells_2000_genes_4_factors_0_seed_gene_sets_formatted_MS_0_EX_0.npy
+    jobid: 4
+    reason: Missing output files: intermediate_results/palava_results_sim_anndata_5000_cells_2000_genes_4_factors_0_seed_gene_sets_formatted_MS_0_EX_0.npy; Input files updated by another job: data/sim_anndata_5000_cells_2000_genes_4_factors_0_seed_gene_sets_formatted_MS_0_EX_0.h5ad
+    wildcards: cells=5000, genes=2000, factors=4, seed=0, error_str=MS_0_EX_0
+    resources: mem_mb=50000, mem_mib=47684, disk_mb=1000, disk_mib=954, tmpdir=<TBD>, cpus=1, runtime=30, gres=gpu:1, account=punim0614, partition=gpu-a100,gpu-a100-short, output_dr=Out_files/run_palava_%x.%j.out, job_name=palava
+
+
+        python run_palava.py --data_directory='data/sim_anndata_5000_cells_2000_genes_4_factors_0_seed_gene_sets_formatted_MS_0_EX_0.h5ad'
+        
+Submitted job 4 with external jobid 'Submitted batch job 1730269'.
+[Mon Nov 18 21:47:53 2024]
+Finished job 1.
+3 of 5 steps (60%) done
+[Mon Nov 18 21:49:03 2024]
+Finished job 4.
+4 of 5 steps (80%) done
+Select jobs to execute...
+
+[Mon Nov 18 21:49:03 2024]
+localrule not_all:
+    input: intermediate_results/linear_palava_results_sim_anndata_5000_cells_2000_genes_4_factors_0_seed_gene_sets_formatted_MS_0_EX_0.npy, intermediate_results/palava_results_sim_anndata_5000_cells_2000_genes_4_factors_0_seed_gene_sets_formatted_MS_0_EX_0.npy
+    jobid: 0
+    reason: Input files updated by another job: intermediate_results/linear_palava_results_sim_anndata_5000_cells_2000_genes_4_factors_0_seed_gene_sets_formatted_MS_0_EX_0.npy, intermediate_results/palava_results_sim_anndata_5000_cells_2000_genes_4_factors_0_seed_gene_sets_formatted_MS_0_EX_0.npy
+    resources: mem_mb=2000, mem_mib=1908, disk_mb=1000, disk_mib=954, tmpdir=/tmp, cpus=1, runtime=60
+
+[Mon Nov 18 21:49:03 2024]
+Finished job 0.
+5 of 5 steps (100%) done
+Complete log: .snakemake/log/2024-11-18T213712.166487.snakemake.log

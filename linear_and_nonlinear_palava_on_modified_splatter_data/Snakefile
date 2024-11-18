@@ -1,0 +1,126 @@
+
+'''
+yYou will need to set up two conda environment  "scvi-palava-development-env" (with palava) and  "r-env-seurat" (with the spatter R package provided in the repo). You will need to change the conda names in the code below to the names of the environements you created.
+
+
+snakemake command to run the code "snakemake --profile slurm --use-conda --rerun-triggers mtime".
+
+'''
+
+
+ERRORS_ = [f"MS_{i}_EX_0" for i in [0,10, 20,30,40,50]] + [f"MS_0_EX_{i}" for i in [10, 20,30,40,50]]
+
+
+SEEDS = [0,1,2,3,4,5,6,7,8,9]
+
+palava_results =  expand('intermediate_results/palava_results_sim_anndata_5000_cells_2000_genes_4_factors_{seed}_seed_gene_sets_formatted_{errors_}.npy', seed=SEEDS, errors_ =ERRORS_)
+
+palava_linear_results =  expand('intermediate_results/linear_palava_results_sim_anndata_5000_cells_2000_genes_4_factors_{seed}_seed_gene_sets_formatted_{errors_}.npy', seed=SEEDS, errors_ =ERRORS_)
+
+
+rule not_all:
+    input:
+        palava_linear_results, 
+        palava_results
+    
+
+rule run_linear_palava:
+    input:
+       "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+    output: 
+        'intermediate_results/linear_palava_results_sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.npy'
+    resources:
+        runtime= 30,
+        mem_mb= 50000,
+        cpus= 1,
+        gres = 'gpu:1',
+        account = 'punim0614',
+        partition = 'gpu-a100,gpu-a100-short',
+        output_dr = 'Out_files/linear_%x.%j.out',
+        job_name = 'linear_palava'
+    conda:
+       "scvi-palava-development-env"
+    params:
+       data_dr = "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+    shell:
+        """
+        python run_linear_palava.py --data_directory='{params.data_dr}'
+        """
+
+
+
+rule run_palava:
+    input:
+       "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+    output: 
+        'intermediate_results/palava_results_sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.npy'
+    resources:
+        runtime= 30,
+        mem_mb= 50000,
+        cpus= 1,
+        gres = 'gpu:1',
+        account = 'punim0614',
+        partition = 'gpu-a100,gpu-a100-short',
+        output_dr = 'Out_files/run_palava_%x.%j.out',
+        job_name = 'palava'
+    conda:
+       "scvi-palava-development-env"
+    params:
+       data_dr = "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+    shell:
+        """
+        python run_palava.py --data_directory='{params.data_dr}'
+        """
+
+
+
+
+
+
+rule gen_sim_data:
+    output:
+        "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed.h5ad"
+    conda:
+        "r-env-seurat"
+    resources:
+        runtime= 200,
+        mem_mb= 5000,
+        cpus= 1,
+        gres = 'gpu:0',
+        account = 'punim0614',
+        partition = 'cascade,mig',
+        output_dr = 'Out_files/rule_gen_sim_data%x.%j.out',
+        job_name = 'gen_sim_data'
+    shell:
+        """
+        Rscript --vanilla gen_anndata.R {wildcards.cells} {wildcards.genes} {wildcards.factors} {wildcards.seed}
+        """
+
+
+
+rule add_gene_sets_adata_excessive:
+    input:
+        "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed.h5ad"
+    output:
+        "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_MS_{ms}_EX_{ex}.h5ad"
+    resources:
+        runtime= 200,
+        mem_mb= 10000,
+        cpus= 1,
+        gres = 'gpu:0',
+        account = 'punim0614',
+        partition = 'cascade,mig',
+        output_dr = 'Out_files/adding_gene_sets_adata_%x.%j.out',
+        job_name = 'adding_gen_sets_adata'
+    conda:
+       "scvi-palava-development-env"
+    params:
+       data_dr = "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed.h5ad",
+       MS = '{ms}',
+       EX = '{ex}'
+    shell:
+        """
+        python add_gene_sets_adata_excessive.py --data_directory='{params.data_dr}' --MS={params.MS} --EX={params.EX}
+        """
+
+
