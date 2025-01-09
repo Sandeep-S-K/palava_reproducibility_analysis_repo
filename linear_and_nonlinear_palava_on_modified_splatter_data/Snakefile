@@ -1,6 +1,6 @@
 
 '''
-You will need to set up two conda environment  "scvi-palava-development-env" (with palava) and  "r-env-seurat" (with the spatter R package provided in the repo). You will need to change the conda names in the code below to the names of the environements you created.
+You will need to set up two conda environment  "palava-env" (with palava) and  "r-env-seurat" (with the spatter R package provided in the repo). You will need to change the conda names in the code below to the names of the environements you created.
 
 
 snakemake command to run the code "snakemake --profile slurm --use-conda --rerun-triggers mtime".
@@ -8,10 +8,10 @@ snakemake command to run the code "snakemake --profile slurm --use-conda --rerun
 '''
 
 
-ERRORS_ = [f"MS_{i}_EX_0" for i in [0,10, 20,30,40,50]] + [f"MS_0_EX_{i}" for i in [10, 20,30,40,50]]
+ERRORS_ = [f"MS_{i}_EX_0" for i in [0, 10, 20, 30, 40, 50]] + [f"MS_0_EX_{i}" for i in [10, 20, 30, 40, 50]]
 
 
-SEEDS = [0,1,2,3,4,5,6,7,8,9]
+SEEDS = [0,1,2,3,4,5,6] #,3,4,5,6,7,8,9]
 
 palava_results =  expand('intermediate_results/palava_results_sim_anndata_5000_cells_2000_genes_4_factors_{seed}_seed_gene_sets_formatted_{errors_}.npy', seed=SEEDS, errors_ =ERRORS_)
 
@@ -30,16 +30,16 @@ rule run_linear_palava:
     output: 
         'intermediate_results/linear_palava_results_sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.npy'
     resources:
-        runtime= 30,
-        mem_mb= 50000,
+        runtime= 15,
+        mem_mb= 25000,
         cpus= 1,
         gres = 'gpu:1',
         account = 'punim0614',
-        partition = 'gpu-a100,gpu-a100-short',
+        partition = 'gpu-a100,gpu-a100-short,mig-gpu',
         output_dr = 'Out_files/linear_%x.%j.out',
         job_name = 'linear_palava'
     conda:
-       "scvi-palava-development-env"
+       "palava-env"
     params:
        data_dr = "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
     shell:
@@ -55,25 +55,22 @@ rule run_palava:
     output: 
         'intermediate_results/palava_results_sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.npy'
     resources:
-        runtime= 30,
-        mem_mb= 50000,
+        runtime= 15,
+        mem_mb= 25000,
         cpus= 1,
         gres = 'gpu:1',
         account = 'punim0614',
-        partition = 'gpu-a100,gpu-a100-short',
+        partition = 'gpu-a100,gpu-a100-short,mig-gpu',
         output_dr = 'Out_files/run_palava_%x.%j.out',
         job_name = 'palava'
     conda:
-       "scvi-palava-development-env"
+       "palava-env"
     params:
        data_dr = "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
     shell:
         """
         python run_palava.py --data_directory='{params.data_dr}'
         """
-
-
-
 
 
 
@@ -113,7 +110,7 @@ rule add_gene_sets_adata_excessive:
         output_dr = 'Out_files/adding_gene_sets_adata_%x.%j.out',
         job_name = 'adding_gen_sets_adata'
     conda:
-       "scvi-palava-development-env"
+       "palava-env"
     params:
        data_dr = "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed.h5ad",
        MS = '{ms}',
