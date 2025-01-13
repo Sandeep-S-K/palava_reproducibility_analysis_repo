@@ -170,10 +170,23 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+
+
 # PyPI configuration file
 .pypirc
-.linear_and_nonlinear_palava_on_modified_splatter_data/Out_files/
-.linear_and_nonlinear_palava_on_modified_splatter_data/intermediate_results/
-.linear_and_nonlinear_palava_on_modified_splatter_data/data/
-.linear_and_nonlinear_palava_on_modified_splatter_data/.snakemake/
 
+
+# Snamekamek 
+**/.snakemake/
+
+# R data files
+.RData 
+.Rhistory
+
+# other folders for data generated and so on
+linear_and_nonlinear_palava_on_modified_splatter_data/Out_files/
+linear_and_nonlinear_palava_on_modified_splatter_data/intermediate_results/
+linear_and_nonlinear_palava_on_modified_splatter_data/data/
+linear_and_nonlinear_palava_on_modified_splatter_data/data/
+fetal_erythropoesis_data_analysis/Out_files_and_results
+fetal_erythropoesis_data_analysis/data

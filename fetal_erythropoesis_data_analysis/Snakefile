@@ -1,0 +1,44 @@
+
+'''
+snakemake --profile slurm --use-conda
+sinteractive -p interactive --time=1-00:00:00 --cpus-per-task=1
+'''
+
+LAMS = [0.5]#, 1.0]
+LAMS_MARKER_GENES = [0.05] #0.1
+PALAVA_WIDTH = [ 200]
+LIST_OF_NONLIN_FACTORS = ['20'] #, cannot put commas in widlcard bug in snakemake, e.x '0-1-2'
+STR_AB_EXP = ['fetal_erythropoesis']
+SEEDS = [0,1,2,3,4,5]
+rule all:
+    input:
+        expand('Out_files_and_results/{str_ab_exp}/seed={seed}_lambda={lam}_lambda_marker_genes={lambda_marker_genes}_palava_width={palava_width}_list_of_nonlin_factors={list_of_nonlin_factors}/done.txt',
+               lam=LAMS,
+               palava_width=PALAVA_WIDTH,
+               list_of_nonlin_factors=LIST_OF_NONLIN_FACTORS,
+               str_ab_exp=STR_AB_EXP,
+                lambda_marker_genes =LAMS_MARKER_GENES,
+                seed = SEEDS
+               )
+
+rule run_palava:
+    output:
+        'Out_files_and_results/{str_ab_exp}/seed={seed}_lambda={lam}_lambda_marker_genes={lambda_marker_genes}_palava_width={palava_width}_list_of_nonlin_factors={list_of_nonlin_factors}/done.txt'
+    resources:
+        runtime=600,
+        mem_mb=100000,#150000
+        cpus=1,
+        gres='gpu:1',
+        account='punim0614',
+        partition= 'gpu-a100,mig-gpu', # ,mig-gpu
+        output_dr= lambda wildcards: f"Out_files_and_results/{wildcards.str_ab_exp}/seed={wildcards.seed}_lambda={wildcards.lam}_lambda_marker_genes={wildcards.lambda_marker_genes}_palava_width={wildcards.palava_width}_list_of_nonlin_factors={wildcards.list_of_nonlin_factors}/run_palava_%x.%j.out",
+        job_name= 'scvi_palava'
+    conda:
+        "palava-env"
+    shell:
+        """
+        python scVI_palava_erythropoesis_data.py --lambda_='{wildcards.lam}' --str_ab_exp='{wildcards.str_ab_exp}' --palava_width='{wildcards.palava_width}' --list_of_nonlin_factors='{wildcards.list_of_nonlin_factors}' --lambda_marker_genes='{wildcards.lambda_marker_genes}' --seed='{wildcards.seed}' --dir='seed={wildcards.seed}_lambda={wildcards.lam}_lambda_marker_genes={wildcards.lambda_marker_genes}_palava_width={wildcards.palava_width}_list_of_nonlin_factors={wildcards.list_of_nonlin_factors}'
+        """
+
+
+

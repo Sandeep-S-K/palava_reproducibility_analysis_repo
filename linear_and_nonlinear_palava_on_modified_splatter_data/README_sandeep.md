@@ -1,1 +1,1 @@
- - the gradient clipe is 100, could try 1e4 as in real data, conda install conda-forge::r-base=4.3.1;conda install bioconda::bioconductor-scater=1.30;conda install bioconda::bioconductor-scater=1.30; conda install conda-forge::r-devtools=2.4;conda install conda-forge::r-reticulate=1.38; conda install defaults::anndata=0.10; conda install -c conda-forge -c bioconda -c defaults r-base bioconductor-scater r-devtools r-reticulate anndata
+ 
