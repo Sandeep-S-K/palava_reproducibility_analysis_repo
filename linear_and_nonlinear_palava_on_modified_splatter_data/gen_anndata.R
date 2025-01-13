@@ -5,7 +5,7 @@ suppressPackageStartupMessages({
   library(reticulate)
 })
 
-reticulate::use_python(python = '/data/gpfs/projects/punim0614/sandeep_sk/Python_HPC/anaconda3/envs/r-env/bin/python',required = T)
+#reticulate::use_python(python = '/data/gpfs/projects/punim0614/sandeep_sk/Python_HPC/anaconda3/envs/r-env/bin/python',required = T)
 
 args <- commandArgs(trailingOnly = TRUE)
 
