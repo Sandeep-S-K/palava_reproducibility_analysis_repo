@@ -47,3 +47,7 @@ Once the environments and profile are configured:
 
 The provided notebook will load the data and create plots to visualise the results.  
 
+
+### TODO 
+- Remove unncessary cells from the fetal erythroposesis ananlysis notebook
+
