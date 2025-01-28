@@ -2,19 +2,13 @@ import os
 
 import scanpy as sc
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib import rcParams
-from matplotlib import colors
+
 import palava
-import subprocess
 import argparse
 #import seaborn as sb
 from palava import settings
 import re
-import json
 import torch
-import time
 import timeit
 
 num_facs_unann = 1
@@ -57,7 +51,7 @@ SCVI_palava = palava.model.SCVI_palava
 
 SCVI_palava.setup_anndata(adata)
 
-lam = [0.2] * num_facs_ann + [0.2] * num_facs_unann
+lam = [0.25] * num_facs_ann + [0.25] * num_facs_unann
 
 nonlinear  = [0 for _ in range(num_facs_ann + num_facs_unann)]
 
@@ -68,7 +62,7 @@ scvi_palava = SCVI_palava(adata, n_annotated_latent =  len(pathways_bool), n_una
 
 start = timeit.default_timer()
 
-scvi_palava.train(1000, plan_kwargs = plan_kwargs, batch_size = 100, gradient_clip_val = 100.0)
+scvi_palava.train(1000, plan_kwargs = plan_kwargs, batch_size = 100, gradient_clip_val = 100)
 
 stop = timeit.default_timer()
 training_time = stop - start

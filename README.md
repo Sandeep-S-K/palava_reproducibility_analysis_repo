@@ -16,7 +16,7 @@ This folder contains the Snakemake pipeline for running linear and nonlinear PAL
      - Install the local version of the splatter package from the repository using devtools. First, ensure the r-base environment is active. Then, navigate to the repository directory in an active R session and run `devtools::install_local("splatter")`.   
      - Create another conda environment named `palava-env` and install  `PALAVA` along with Scanpy scanpy using `pip install scanpy==1.9.8`.  
    - Update the Snakemake file to reflect the names of these environments that modified splatter and PALAVA are installed.  
-
+ - comparison with **[Spectra](https://github.com/dpeerlab/spectra)** can be removed by commenting the `spectra_results` line in the `rull all` of the snamke file. To include, create an environment with spectra  called `spectra-env`. The specific package version used for this analysis is mentioned in the [environmnets folder](./environments/spectra_env.yml.).
 2. **Create a Snakemake Profile**  
    - To run the pipeline with SLURM, you need a [Snakemake profile](https://snakemake.readthedocs.io/en/stable/executing/cli.html).  
    - Below is an example slurm profile. Creates a configuration file at `.config/snakemake/slurm/config.yaml` with:  
@@ -36,6 +36,7 @@ This folder contains the Snakemake pipeline for running linear and nonlinear PAL
    - Refer to the Snakemake documentation for further details on setting up profiles.  
    - Update the rules and profile to reflect your system as desired (e.g partition, etc)
 
+
 ### Running the Pipeline  
 
 Once the environments and profile are configured:  
@@ -49,5 +50,5 @@ The provided notebook will load the data and create plots to visualise the resul
 
 
 ### TODO 
-- Remove unncessary cells from the fetal erythroposesis ananlysis notebook
+- Remove unncessary code cells from the fetal erythroposesis ananlysis notebook
 

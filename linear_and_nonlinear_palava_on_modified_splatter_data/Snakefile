@@ -1,7 +1,12 @@
 
 '''
-You will need to set up two conda environment  "palava-env" (with palava) and  "r-env-seurat" (with the spatter R package provided in the repo). You will need to change the conda names in the code below to the names of the environements you created.
+You will need to set up two conda environment  "palava-env" (with palava) and  "r-env-seurat" (with the spatter R package provided in the repo). 
 
+You will need to change the conda names in the code below to the names of the environements you created.
+
+For spectra make an environment called 'spectra-env' with spectra installed.
+
+The environment folder contains the installed packages installed in the envrionemnt for specificty.
 
 snakemake command to run the code "snakemake --profile slurm --use-conda --rerun-triggers mtime".
 
@@ -11,7 +16,11 @@ snakemake command to run the code "snakemake --profile slurm --use-conda --rerun
 ERRORS_ = expand('MS_{i}_EX_0', i = [0, 10, 20, 30, 40, 50]) +expand('MS_0_EX_{i}', i = [ 10, 20, 30, 40, 50])
 
 
-SEEDS = [0,1,2,3,4,5,6,7,8,9] # To test use just one seed 
+SEEDS = [0,1,2]#,3,4,5,6,7,8,9] # To test use few seed 
+
+
+spectra_results =  expand('intermediate_results/spectra_results_sim_anndata_5000_cells_2000_genes_4_factors_{seed}_seed_gene_sets_formatted_{errors_}.npy', seed=SEEDS, errors_ =ERRORS_)
+
 
 palava_results =  expand('intermediate_results/palava_results_sim_anndata_5000_cells_2000_genes_4_factors_{seed}_seed_gene_sets_formatted_{errors_}.npy', seed=SEEDS, errors_ =ERRORS_)
 
@@ -21,8 +30,34 @@ palava_linear_results =  expand('intermediate_results/linear_palava_results_sim_
 rule all:
     input:
         palava_linear_results, 
-        palava_results
-    
+        palava_results,
+        spectra_results
+
+
+rule run_spectra:
+    input:
+       "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+    output: 
+        'intermediate_results/spectra_results_sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.npy'
+    resources:
+        runtime= 500,
+        mem_mb= 50000,
+        cpus= 1,
+        gres = 'gpu:0',
+        account = 'punim0614',
+        partition = 'mig,cascade',
+        output_dr = 'Out_files/run_spectra_%x.%j.out',
+        job_name = 'spectra'
+    conda:
+       "spectra-env"
+    params:
+       data_dr = "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+
+    shell:
+        """
+        python run_spectra.py --data_directory='{params.data_dr}'
+        """
+
 
 rule run_linear_palava:
     input:

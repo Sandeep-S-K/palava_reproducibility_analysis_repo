@@ -1,22 +1,11 @@
 import scanpy as sc
-import anndata as ad
-import pandas as pd
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import warnings
 import palava
-import json
-import sys
-import h5py
-
-import os
-import gc
 from palava import settings
-import matplotlib.patches as mpatches
-import time 
-from matplotlib.backends.backend_pdf import PdfPages
-import matplotlib
+import gc
 import argparse
 
 num_unann = int(40)
@@ -28,10 +17,6 @@ parser.add_argument('--lambda_', type=str, help='Lambda values')
 parser.add_argument('--str_ab_exp', type=str, help='String about experiment, filders will be names based on this')
 
 parser.add_argument('--list_of_nonlin_factors', type=str, help='lst of ind of nonlinear factors')
-
-parser.add_argument('--palava_width', type=str, help='width of palava decoder')
-
-parser.add_argument('--lambda_marker_genes', type=str, help='width of palava decoder')
 
 parser.add_argument('--dir', type=str, help='directory to save figs')
 
@@ -48,12 +33,7 @@ hyper = args.lambda_
 #string about experiment
 str_ab_exp = args.str_ab_exp
 
-palava_width = int(args.palava_width)
 
-
-lambda_marker_genes = float(args.lambda_marker_genes)
-
-print('palava_width', palava_width)
 
 list_of_nonlin_factors = args.list_of_nonlin_factors
 
@@ -68,12 +48,6 @@ fdir += str_ab_exp
 fdir += '/' + args.dir
 fdir += '/'
 
-#try:
-#  os.makedirs(fdir)
-#except:
-#  print('dir already made')
-
-# Write all the figures to single pdf
 adata = sc.read('data/fetal_liver_erythroid_with_50H.h5ad')
 pathways = [torch.tensor(i) for i in adata.uns['pathways_5000hvg']]
 
@@ -118,7 +92,7 @@ for i in nonlin_facs:
 for i in range(num_ann):
     print(i, pathway_names[i])
     
-plan_kwargs = {'lr' :  1e-4,'n_epochs_kl_warmup': 400,'n_steps_kl_warmup': None, 'max_kl_weight' : 1.0}
+plan_kwargs = {'lr' : 1e-4, 'n_epochs_kl_warmup': 400,'n_steps_kl_warmup': None, 'max_kl_weight' : 1.0}
 
 print(plan_kwargs)
 
@@ -129,7 +103,7 @@ lam_ = lam_ + [lam / 2] * num_unann # unann
 
 pathway_names_plot = [pathway_names[i].replace('_', ' ' ).capitalize() + ' ['+str(i)+']'  for i in range(len(pathway_names))] + ['Unannotated factor '+ str(i + 1) + ' ['+str(i+num_ann)+']'  for i in range(num_unann)]
 
-scvi_palava = SCVI_palava(adata,  nonlinear  = nonlinear, n_annotated_latent = len(pathways_bool), n_unannotated_latent = num_unann, lam_lst = lam_ , other_n_latent = 40, pathways_bool = pathways_bool, dispersion = 'gene', palava_n_hidden = palava_width, palava_n_layers = 1,  n_layers = 3, use_batch_norm = 'none', use_layer_norm = 'none',  momentum_train = 0.1,  weight_decay_train = 0.0001, decoder_bias = decoder_bias, non_neg_decoder =True, just_out_weight_decay = True) #, gene_likelihood = 'nb')
+scvi_palava = SCVI_palava(adata,  nonlinear  = nonlinear, n_annotated_latent = len(pathways_bool), n_unannotated_latent = num_unann, lam_lst = lam_ , other_n_latent = 40, pathways_bool = pathways_bool, dispersion = 'gene', palava_n_hidden = 200, palava_n_layers = 1,  n_layers = 3, use_batch_norm = 'none', use_layer_norm = 'none',  momentum_train = 0.1,  weight_decay_train = 0.0001, decoder_bias = decoder_bias, non_neg_decoder = True, just_out_weight_decay = True, dropout_rate= 0.1) 
 print(scvi_palava)
 
 
@@ -157,12 +131,7 @@ np.save(fdir+'factor_importance_scores_dict.npy', factor_importance_scores_dict,
 
 adata.obsm["X_scVI"] = scvi_palava.get_latent_representation()
 
-
-
-
 latent = adata.obsm["X_scVI"][:,:len(pathways_bool)]
-
-
 
 learned_activations = np.transpose(latent)
 
