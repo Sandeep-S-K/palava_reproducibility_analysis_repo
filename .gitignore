@@ -189,3 +189,8 @@ linear_and_nonlinear_palava_on_modified_splatter_data/intermediate_results/
 linear_and_nonlinear_palava_on_modified_splatter_data/data/
 linear_and_nonlinear_palava_on_modified_splatter_data/data/
 fetal_erythropoesis_data_analysis/Out_files_and_results
+
+simulation_data_analysis/*/*/data
+simulation_data_analysis/*/*/Out_files
+simulation_data_analysis/*/*/intermediate_results
+simulation_data_analysis/*/*/slalom_intermediate_results_R
