@@ -1,0 +1,218 @@
+
+'''
+snakemake --profile slurm --use-conda --rerun-triggers mtime
+sinteractive -p interactive --time=1-00:00:00 --cpus-per-task=1
+'''
+# for tests
+#ERRORS_ = expand('MS_{i}_EX_0', i = [0, 30, 50]) +expand('MS_0_EX_{i}', i = [ 10, 30,50])
+
+ERRORS_ = expand('MS_{i}_EX_0', i = [0, 10, 20, 30, 40, 50, 80]) +expand('MS_0_EX_{i}', i = [ 10, 20, 30, 40, 50, 80])
+#ERRORS_ = expand('MS_{i}_EX_0', i = [0]) 
+
+# 101 and 102 is for the softplus act
+SEEDS = [0,1,2,3,4,5]#,3,4,5,6,7,8,9] # To test use few seed 
+
+
+spectra_results =  expand('intermediate_results/spectra_results_sim_anndata_linear_model_5000_cells_2000_genes_4_factors_{seed}_seed_gene_sets_formatted_{errors_}.npy', seed=SEEDS, errors_ =ERRORS_)
+
+adata =  expand('data/sim_anndata_linear_model_5000_cells_2000_genes_4_factors_{seed}_seed_gene_sets_formatted_{errors_}.h5ad', seed=SEEDS, errors_ =ERRORS_)
+
+
+slalom_results =  expand('intermediate_results/slalom_results_sim_anndata_linear_model_5000_cells_2000_genes_4_factors_{seed}_seed_gene_sets_formatted_{errors_}.npy', seed=SEEDS, errors_ =ERRORS_)
+
+
+palava_results =  expand('intermediate_results/palava_results_sim_anndata_linear_model_5000_cells_2000_genes_4_factors_{seed}_seed_gene_sets_formatted_{errors_}.npy', seed=SEEDS, errors_ =ERRORS_)
+
+palava_linear_results =  expand('intermediate_results/linear_palava_results_sim_anndata_linear_model_5000_cells_2000_genes_4_factors_{seed}_seed_gene_sets_formatted_{errors_}.npy', seed=SEEDS, errors_ =ERRORS_)
+
+
+
+
+rule all:
+    input:
+        palava_linear_results, 
+        palava_results,
+        spectra_results,
+        slalom_results,
+        adata
+        #"data/sim_anndata_linear_model_5000_cells_2000_genes_4_factors_0_seed.h5ad"
+
+
+rule run_spectra:
+    input:
+       "data/sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+    output: 
+        'intermediate_results/spectra_results_sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.npy'
+    resources:
+        runtime= 500,
+        mem_mb= 50000,
+        cpus= 1,
+        gres = 'gpu:0',
+        account = 'punim0614',
+        partition = 'fos,cascade,sapphire',
+        output_dr = 'Out_files/run_spectra_%x.%j.out',
+        job_name = 'spectra'
+    conda:
+       "spectra-env-new"
+    params:
+       data_dr = "data/sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+
+    shell:
+        """
+        python run_spectra.py --data_directory='{params.data_dr}'
+        """
+
+
+
+rule run_slalom:
+    input:
+       "data/sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+    output: 
+        'slalom_intermediate_results_R/slalom_results_sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}_latent.csv',
+        'slalom_intermediate_results_R/slalom_results_sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}_factor_loadings.csv',
+        'slalom_intermediate_results_R/slalom_results_sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}_factor_importance.csv',
+        'slalom_intermediate_results_R/slalom_results_sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}_training_time.csv'
+    resources:
+        runtime= 200,
+        mem_mb= 50000,
+        cpus= 1,
+        gres = 'gpu:0',
+        account = 'punim0614',
+        partition = 'fos,cascade,sapphire',
+        output_dr = 'Out_files/run_slalom_%x.%j.out',
+        job_name = 'slalom'
+    conda:
+       "slalom-env"
+    params:
+       data_dr = "data/sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+    shell:
+        """
+        Rscript --vanilla run_slalom.R {params.data_dr}
+        """
+
+rule save_slalom_results_as_dict:
+    input: 
+        'slalom_intermediate_results_R/slalom_results_sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}_latent.csv',
+        'slalom_intermediate_results_R/slalom_results_sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}_factor_loadings.csv',
+        'slalom_intermediate_results_R/slalom_results_sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}_factor_importance.csv',
+        'slalom_intermediate_results_R/slalom_results_sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}_training_time.csv'
+    output:
+        'intermediate_results/slalom_results_sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.npy'
+    resources:
+        runtime= 200,
+        mem_mb= 10000,
+        cpus= 1,
+        gres = 'gpu:0',
+        account = 'punim0614',
+        partition = 'fos,cascade,sapphire',
+        output_dr = 'Out_files/saving_as_dict_slalom_%x.%j.out',
+        job_name = 'formatting_slalom_results'
+    conda:
+       "palava-new2-env"    
+    params:
+       data_dr = "data/sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+    shell:
+        """
+        python save_slalom_results_as_dict.py --data_directory='{params.data_dr}'
+        """
+
+
+
+rule run_palava:
+    input:
+       "data/sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+    output: 
+        'intermediate_results/palava_results_sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.npy'
+    resources:
+        runtime= 200,
+        mem_mb= 50000,
+        cpus= 1,
+        gres = 'gpu:1',
+        account = 'punim0614',
+        partition = 'fos-gpu-l40s',
+        output_dr = 'Out_files/run_palava_%x.%j.out',
+        job_name = 'palava'
+    conda:
+       "palava-new2-env"
+    params:
+       data_dr = "data/sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+    shell:
+        """
+        python run_palava.py --data_directory='{params.data_dr}'
+        """
+
+
+rule run_linear_palava:
+    input:
+       "data/sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+    output: 
+        'intermediate_results/linear_palava_results_sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.npy'
+    resources:
+        runtime= 15,
+        mem_mb= 25000,
+        cpus= 1,
+        gres = 'gpu:1',
+        account = 'punim0614',
+        partition = 'fos-gpu-l40s',
+        output_dr = 'Out_files/linear_%x.%j.out',
+        job_name = 'linear_palava'
+    conda:
+       "palava-new2-env"
+    params:
+       data_dr = "data/sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+    shell:
+        """
+        python run_linear_palava.py --data_directory='{params.data_dr}'
+        """
+
+
+rule gen_sim_data:
+    output:
+        "data/sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed.h5ad"
+    conda:
+        "palava-new2-env"
+    resources:
+        runtime= 200,
+        mem_mb= 5000,
+        cpus= 1,
+        gres = 'gpu:0',
+        account = 'punim0614',
+        partition = 'fos,cascade,sapphire',
+        output_dr = 'Out_files/rule_gen_sim_data%x.%j.out',
+        job_name = 'gen_sim_data_linear_model'
+    shell:
+        """
+        python gen_linear_data.py --seed='{wildcards.seed}'
+        """
+
+
+
+
+
+
+rule add_gene_sets_adata_excessive:
+    input:
+        "data/sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed.h5ad"
+    output:
+        "data/sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_MS_{ms}_EX_{ex}.h5ad"
+    resources:
+        runtime= 200,
+        mem_mb= 10000,
+        cpus= 1,
+        gres = 'gpu:0',
+        account = 'punim0614',
+        partition = 'fos,cascade,sapphire',
+        output_dr = 'Out_files/%x.%j.out',
+        job_name = 'adding_gen_sets_adata'
+    conda:
+       "palava-new2-env"
+    params:
+       data_dr = "data/sim_anndata_linear_model_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed.h5ad",
+       MS = '{ms}',
+       EX = '{ex}'
+    shell:
+        """
+        python add_gene_sets_adata_excessive.py --data_directory='{params.data_dr}' --MS={params.MS} --EX={params.EX}
+        """
+
+

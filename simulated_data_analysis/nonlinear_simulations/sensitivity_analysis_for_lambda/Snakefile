@@ -1,0 +1,125 @@
+
+'''
+snakemake --profile slurm --use-conda --rerun-triggers mtime
+sinteractive -p interactive --time=1-00:00:00 --cpus-per-task=1
+'''
+
+ERRORS_ = [f"MS_{i}_EX_0" for i in [0,30, 50]]+ [f"MS_0_EX_{i}" for i in [30, 50]]
+
+
+SEEDS = [0, 1,2,3,4]#,1,2]
+
+
+LAMBDA=[0.00001, 0.1,  0.25, 0.5, 1.0,  5.0]
+
+palava_results=expand('intermediate_results/palava_lambda_{lambda_}_results_sim_anndata_5000_cells_2000_genes_4_factors_{seed}_seed_gene_sets_formatted_{errors_}.npy', seed=SEEDS, errors_ =ERRORS_, lambda_=LAMBDA)
+
+adata =  expand('data/sim_anndata_5000_cells_2000_genes_4_factors_{seed}_seed_gene_sets_formatted_{errors_}.h5ad', seed=SEEDS, errors_ =ERRORS_)
+
+
+rule not_all:
+    input:
+        palava_results,
+        adata
+    
+
+rule run_palava:
+    input:
+       "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+    output: 
+        'intermediate_results/palava_lambda_{lambda_}_results_sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.npy'
+    resources:
+        runtime= 200,
+        mem_mb= 50000,
+        cpus= 1,
+        gres = 'gpu:1',
+        account = 'punim0614',
+        partition = 'fos-gpu-l40s',
+        output_dr = 'Out_files/run_palava_%x.%j.out',
+        job_name = 'palava'
+    conda:
+       "palava-new2-env"
+    params:
+       data_dr = "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+    shell:
+        """
+        python run_palava.py --data_directory='{params.data_dr}' --lambda_={wildcards.lambda_}
+        """
+
+
+
+rule run_linear_palava:
+    input:
+       "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+    output: 
+        'intermediate_results/linear_palava_lambda_{lambda_}_results_sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.npy'
+    resources:
+        runtime= 200,
+        mem_mb= 50000,
+        cpus= 1,
+        gres = 'gpu:1',
+        account = 'punim0614',
+        partition = 'fos-gpu-l40s',
+        output_dr = 'Out_files/%x.%j.out',
+        job_name = 'linear_palava'
+    conda:
+       "palava-new2-env"
+    params:
+       data_dr = "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_{error_str}.h5ad"
+    shell:
+        """
+        python run_linear_palava.py --data_directory='{params.data_dr}' --lambda_={wildcards.lambda_}
+        """
+
+
+
+
+
+rule gen_sim_data:
+    output:
+        "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed.h5ad"
+    conda:
+        "r-modified-splatter-env"
+    resources:
+        runtime= 200,
+        mem_mb= 5000,
+        cpus= 1,
+        gres = 'gpu:0',
+        account = 'punim0614',
+        partition = 'fos',
+        output_dr = 'Out_files/%x.%j.out',
+        job_name = 'gen_sim_data'
+    shell:
+        """
+        Rscript --vanilla gen_anndata.R {wildcards.cells} {wildcards.genes} {wildcards.factors} {wildcards.seed}
+        """
+
+
+
+
+rule add_gene_sets_adata_excessive:
+    input:
+        "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed.h5ad"
+    output:
+        "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed_gene_sets_formatted_MS_{ms}_EX_{ex}.h5ad"
+    resources:
+        runtime= 200,
+        mem_mb= 10000,
+        cpus= 1,
+        gres = 'gpu:0',
+        account = 'punim0614',
+        partition = 'fos',
+        output_dr = 'Out_files/adding_gene_sets_adata_%x.%j.out',
+        job_name = 'adding_gen_sets_adata'
+    conda:
+       "palava-new2-env"
+    params:
+       data_dr = "data/sim_anndata_{cells}_cells_{genes}_genes_{factors}_factors_{seed}_seed.h5ad",
+       MS = '{ms}',
+       EX = '{ex}'
+    shell:
+        """
+        python add_gene_sets_adata_excessive.py --data_directory='{params.data_dr}' --MS={params.MS} --EX={params.EX}
+        """
+
+
