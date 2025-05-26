@@ -8,3 +8,5 @@ adata = sc.read('data/no_counts_layer_iPSC_with_pathways_cell_metadata_and_stage
 adata.layers['counts'] = adata.X 
 # Save the updated file 
 adata.write('data/iPSC_with_pathways_cell_metadata_and_stages.h5ad') </code></pre>
+
+The counts layer and data of the Spectra's .h5ad result object was deleted before saving to reduce space, but the model outputs are preserved as is in `intermediate_results/no_X_no_counts_layer_spectra_adataiPSC_with_pathways_cell_metadata_and_stages.h5ad`.
