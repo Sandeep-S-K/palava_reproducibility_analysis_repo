@@ -1,0 +1,117 @@
+
+'''
+snakemake --profile slurm --use-conda
+sinteractive -p interactive --time=1-00:00:00 --cpus-per-task=1
+snakemake command to run the code "snakemake --profile slurm --use-conda --rerun-triggers mtime".
+
+'''
+
+LAMS = [ 0.15, 0.2]#, 1.0]
+LAMS_MARKER_GENES = [0.1] #0.1
+PALAVA_WIDTH = [ 25]
+LIST_OF_NONLIN_FACTORS = [ '0-1-2-16-21','none'] # 'none', 'all', cannot put commas in widlcard bug in snakemake
+STR_AB_EXP = ['ipsc_saved_models_paper']
+SEEDS = [0,1,2,3,4]
+rule all:
+    input:
+      #  expand('Out_files_and_results/{str_ab_exp}/seed={seed}_lambda={lam}_lambda_marker_genes={lambda_marker_genes}_palava_width={palava_width}_list_of_nonlin_factors={list_of_nonlin_factors}/done.txt',
+      #         lam=LAMS,
+      #         palava_width=PALAVA_WIDTH,
+      #         list_of_nonlin_factors=LIST_OF_NONLIN_FACTORS,
+      #         str_ab_exp=STR_AB_EXP,
+      #          lambda_marker_genes =LAMS_MARKER_GENES,
+      #          seed = SEEDS
+      #      )
+         expand('Out_files_and_results_cc/{str_ab_exp}/seed={seed}_lambda={lam}_lambda_marker_genes={lambda_marker_genes}_palava_width={palava_width}_list_of_nonlin_factors={list_of_nonlin_factors}/done.txt',
+               lam=LAMS,
+               palava_width=PALAVA_WIDTH,
+             list_of_nonlin_factors=LIST_OF_NONLIN_FACTORS,
+               str_ab_exp=STR_AB_EXP,
+                     lambda_marker_genes =LAMS_MARKER_GENES,
+                seed = SEEDS
+             )
+         #'intermediate_results/spectra_results_iPSC_with_pathways_cell_metadata_and_stages.npy'
+
+
+rule run_palava_cc:
+    output:
+        'Out_files_and_results_cc/{str_ab_exp}/seed={seed}_lambda={lam}_lambda_marker_genes={lambda_marker_genes}_palava_width={palava_width}_list_of_nonlin_factors={list_of_nonlin_factors}/done.txt'
+    resources:
+        runtime=650,
+        mem_mb=150000,
+        cpus=1,
+        gres='gpu:1',
+        account='punim0614',
+        partition='fos-gpu-l40s',
+        output_dr= lambda wildcards: f"Out_files_and_results_cc/{wildcards.str_ab_exp}/seed={wildcards.seed}_lambda={wildcards.lam}_lambda_marker_genes={wildcards.lambda_marker_genes}_palava_width={wildcards.palava_width}_list_of_nonlin_factors={wildcards.list_of_nonlin_factors}/run_palava_%x.%j.out",
+        job_name= 'scvi_palava'
+    conda:
+        "palava-new2-env"
+    shell:
+        """
+        python scVI_palava_ipsc-cc.py --lambda_='{wildcards.lam}' --str_ab_exp='{wildcards.str_ab_exp}' --palava_width='{wildcards.palava_width}' --list_of_nonlin_factors='{wildcards.list_of_nonlin_factors}' --lambda_marker_genes='{wildcards.lambda_marker_genes}' --seed='{wildcards.seed}' --dir='seed={wildcards.seed}_lambda={wildcards.lam}_lambda_marker_genes={wildcards.lambda_marker_genes}_palava_width={wildcards.palava_width}_list_of_nonlin_factors={wildcards.list_of_nonlin_factors}'
+        """
+rule run_palava:
+    output:
+        'Out_files_and_results/{str_ab_exp}/seed={seed}_lambda={lam}_lambda_marker_genes={lambda_marker_genes}_palava_width={palava_width}_list_of_nonlin_factors={list_of_nonlin_factors}/done.txt'
+    resources:
+        runtime=650,
+        mem_mb=150000,
+        cpus=1,
+        gres='gpu:1',
+        account='punim0614',
+        partition='fos-gpu-l40s',
+        output_dr= lambda wildcards: f"Out_files_and_results/{wildcards.str_ab_exp}/seed={wildcards.seed}_lambda={wildcards.lam}_lambda_marker_genes={wildcards.lambda_marker_genes}_palava_width={wildcards.palava_width}_list_of_nonlin_factors={wildcards.list_of_nonlin_factors}/run_palava_%x.%j.out",
+        job_name= 'scvi_palava'
+    conda:
+        "palava-new2-env"
+    shell:
+        """
+        python scVI_palava_ipsc.py --lambda_='{wildcards.lam}' --str_ab_exp='{wildcards.str_ab_exp}' --palava_width='{wildcards.palava_width}' --list_of_nonlin_factors='{wildcards.list_of_nonlin_factors}' --lambda_marker_genes='{wildcards.lambda_marker_genes}' --seed='{wildcards.seed}' --dir='seed={wildcards.seed}_lambda={wildcards.lam}_lambda_marker_genes={wildcards.lambda_marker_genes}_palava_width={wildcards.palava_width}_list_of_nonlin_factors={wildcards.list_of_nonlin_factors}'
+        """
+
+
+rule run_palava_no_annotations:
+    output:
+        'Out_files_and_results/{str_ab_exp}/no_annotations_seed={seed}_lambda={lam}_lambda_marker_genes={lambda_marker_genes}_palava_width={palava_width}_list_of_nonlin_factors={list_of_nonlin_factors}/done.txt'
+    resources:
+        runtime=600,
+        mem_mb=150000,
+        cpus=1,
+        gres='gpu:1',
+        account='punim0614',
+        partition='mig-gpu,gpu-a100',
+        output_dr= lambda wildcards: f"Out_files_and_results/{wildcards.str_ab_exp}/no_annotations_seed={wildcards.seed}_lambda={wildcards.lam}_lambda_marker_genes={wildcards.lambda_marker_genes}_palava_width={wildcards.palava_width}_list_of_nonlin_factors={wildcards.list_of_nonlin_factors}/run_npalava_no_anno_%x.%j.out",
+        job_name= 'scvi_palava'
+    conda:
+        "scvi-palava-development-env"
+    shell:
+        """
+        python scVI_palava_ipsc_no_annotations.py --lambda_='{wildcards.lam}' --str_ab_exp='{wildcards.str_ab_exp}' --palava_width='{wildcards.palava_width}' --list_of_nonlin_factors='{wildcards.list_of_nonlin_factors}' --lambda_marker_genes='{wildcards.lambda_marker_genes}' --seed='{wildcards.seed}' --dir='no_annotations_seed={wildcards.seed}_lambda={wildcards.lam}_lambda_marker_genes={wildcards.lambda_marker_genes}_palava_width={wildcards.palava_width}_list_of_nonlin_factors={wildcards.list_of_nonlin_factors}'
+        """
+
+
+rule run_spectra:
+    input:
+       "data/{adata}.h5ad"
+    output: 
+        'intermediate_results/spectra_results_{adata}.npy'
+    resources:
+        runtime= 5000,
+        mem_mb= 100000,
+        cpus= 1,
+        gres = 'gpu:0',
+        account = 'punim0614',
+        partition = 'sapphire',
+        output_dr = 'Out_files/run_spectra_%x.%j.out',
+        job_name = 'real_data_spectra'
+    conda:
+       "spectra-env-new"
+    params:
+       data_dr = "data/{adata}.h5ad"
+    shell:
+        """
+        conda list
+        pip list
+        python run_spectra.py --data_directory='{params.data_dr}'
+        """
