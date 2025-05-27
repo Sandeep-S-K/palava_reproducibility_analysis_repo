@@ -1,0 +1,74 @@
+
+'''
+snakemake --profile slurm --use-conda
+sinteractive -p interactive --time=1-00:00:00 --cpus-per-task=1
+snakemake command to run the code "snakemake --profile slurm --use-conda --rerun-triggers mtime".
+
+'''
+
+LAMS = [ 0.5]
+LAMS_MARKER_GENES = [ 0.1] #In use
+PALAVA_WIDTH = [ 25]
+LIST_OF_NONLIN_FACTORS = ['8-26-50-51','none']#,'8-26-51', '8-26-51-52-53'] #, cannot put commas in widlcard bug in snakemake, e.x '
+STR_AB_EXP = ['mouse_pancreas_2k']
+SEEDS = [0,1,3]
+
+rule all:
+    input:
+        expand('Out_files_and_results/{str_ab_exp}/small_lr_seed={seed}_lambda={lam}_lambda_marker_genes={lambda_marker_genes}_palava_width={palava_width}_list_of_nonlin_factors={list_of_nonlin_factors}/done.txt',
+               lam=LAMS,
+               palava_width=PALAVA_WIDTH,
+               list_of_nonlin_factors=LIST_OF_NONLIN_FACTORS,
+               str_ab_exp=STR_AB_EXP,
+                lambda_marker_genes =LAMS_MARKER_GENES,
+                seed = SEEDS
+               ),
+        'intermediate_results/spectra_results_mouse_pancreas_updated_beta_with_pdx1.npy'
+
+
+rule run_palava_small_lr:
+    output:
+        'Out_files_and_results/{str_ab_exp}/small_lr_seed={seed}_lambda={lam}_lambda_marker_genes={lambda_marker_genes}_palava_width={palava_width}_list_of_nonlin_factors={list_of_nonlin_factors}/done.txt'
+    resources:
+        runtime=200,
+        mem_mb=50000,
+        cpus=1,
+        gres='gpu:1',
+        account='punim0614',
+        partition= 'fos-gpu-l40s', # ,mig-gpu'fos-gpu-l40s'
+        output_dr= lambda wildcards: f"Out_files_and_results/{wildcards.str_ab_exp}/small_lr_seed={wildcards.seed}_lambda={wildcards.lam}_lambda_marker_genes={wildcards.lambda_marker_genes}_palava_width={wildcards.palava_width}_list_of_nonlin_factors={wildcards.list_of_nonlin_factors}/run_palava_%x.%j.out",
+        job_name= 'scvi_palava'
+    conda:
+        "palava-new2-env"
+    shell:
+        """
+        python run_palava_mouse_pancrease_small_lr.py --lambda_='{wildcards.lam}' --str_ab_exp='{wildcards.str_ab_exp}' --palava_width='{wildcards.palava_width}' --list_of_nonlin_factors='{wildcards.list_of_nonlin_factors}' --lambda_marker_genes='{wildcards.lambda_marker_genes}' --seed='{wildcards.seed}' --dir='small_lr_seed={wildcards.seed}_lambda={wildcards.lam}_lambda_marker_genes={wildcards.lambda_marker_genes}_palava_width={wildcards.palava_width}_list_of_nonlin_factors={wildcards.list_of_nonlin_factors}'
+        """
+
+rule run_spectra:
+    input:
+       "data/{adata}.h5ad"
+    output: 
+        'intermediate_results/spectra_results_{adata}.npy'
+    resources:
+        runtime= 5000,
+        mem_mb= 100000,
+        cpus= 1,
+        gres = 'gpu:0',
+        account = 'punim0614',
+        partition = 'cascade,mig',
+        output_dr = 'Out_files/run_spectra_%x.%j.out',
+        job_name = 'real_data_spectra'
+    conda:
+       "spectra-fresh-env"
+    params:
+       data_dr = "data/{adata}.h5ad"
+
+    shell:
+        """
+        conda list
+        pip list
+        python run_spectra.py --data_directory='{params.data_dr}'
+        """
+
+

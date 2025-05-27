@@ -1,0 +1,60 @@
+/apps/easybuild-2022/easybuild/software/Compiler/GCCcore/11.3.0/Python/3.10.4/lib/python3.10/site-packages/paramiko/transport.py:236: CryptographyDeprecationWarning: Blowfish has been deprecated
+  "class": algorithms.Blowfish,
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Provided resources: mem_mb=50000, mem_mib=47684, disk_mb=1000, disk_mib=954, cpus=1
+Select jobs to execute...
+
+[Mon May 26 21:26:07 2025]
+rule run_palava_small_lr:
+    output: Out_files_and_results/mouse_pancreas_2k/small_lr_seed=1_lambda=0.5_lambda_marker_genes=0.1_palava_width=25_list_of_nonlin_factors=none/done.txt
+    jobid: 0
+    reason: Missing output files: Out_files_and_results/mouse_pancreas_2k/small_lr_seed=1_lambda=0.5_lambda_marker_genes=0.1_palava_width=25_list_of_nonlin_factors=none/done.txt
+    wildcards: str_ab_exp=mouse_pancreas_2k, seed=1, lam=0.5, lambda_marker_genes=0.1, palava_width=25, list_of_nonlin_factors=none
+    resources: mem_mb=50000, mem_mib=47684, disk_mb=1000, disk_mib=954, tmpdir=/tmp, cpus=1, runtime=200, gres=gpu:1, account=punim0614, partition=fos-gpu-l40s, output_dr=Out_files_and_results/mouse_pancreas_2k/small_lr_seed=1_lambda=0.5_lambda_marker_genes=0.1_palava_width=25_list_of_nonlin_factors=none/run_palava_%x.%j.out, job_name=scvi_palava
+
+
+        python run_palava_mouse_pancrease_small_lr.py --lambda_='0.5' --str_ab_exp='mouse_pancreas_2k' --palava_width='25' --list_of_nonlin_factors='none' --lambda_marker_genes='0.1' --seed='1' --dir='small_lr_seed=1_lambda=0.5_lambda_marker_genes=0.1_palava_width=25_list_of_nonlin_factors=none'
+        
+Activating conda environment: palava-new2-env
+/data/gpfs/projects/punim0614/sandeep_sk/Python_HPC/anaconda3/envs/palava-new2-env/lib/python3.10/site-packages/palava/_settings.py:63: UserWarning: Since v1.0.0, scvi-tools no longer uses a random seed by default. Run `scvi.settings.seed = 0` to reproduce results from previous versions.
+  self.seed = seed
+/data/gpfs/projects/punim0614/sandeep_sk/Python_HPC/anaconda3/envs/palava-new2-env/lib/python3.10/site-packages/palava/_settings.py:70: UserWarning: Setting `dl_pin_memory_gpu_training` is deprecated in v1.0 and will be removed in v1.1. Please pass in `pin_memory` to the data loaders instead.
+  self.dl_pin_memory_gpu_training = (
+palava_width 25
+nonlin_facs none
+string about experiment:  mouse_pancreas_2k
+Traceback (most recent call last):
+  File "/data/gpfs/projects/punim0614/sandeep_sk/Python_HPC/palava_reproducibility_analysis_repo/mouse_pancrease_data_analysis/run_palava_mouse_pancrease_small_lr.py", line 62, in <module>
+    adata = sc.read('data/mouse_pancreas_updated_beta_with_pdx1.h5ad')
+  File "/home/ssanthoshkum/.local/lib/python3.10/site-packages/legacy_api_wrap/__init__.py", line 82, in fn_compatible
+    return fn(*args_all, **kw)
+  File "/home/ssanthoshkum/.local/lib/python3.10/site-packages/scanpy/readwrite.py", line 142, in read
+    return _read(
+  File "/home/ssanthoshkum/.local/lib/python3.10/site-packages/scanpy/readwrite.py", line 777, in _read
+    return read_h5ad(filename, backed=backed)
+  File "/data/gpfs/projects/punim0614/sandeep_sk/Python_HPC/anaconda3/envs/palava-new2-env/lib/python3.10/site-packages/anndata/_io/h5ad.py", line 237, in read_h5ad
+    with h5py.File(filename, "r") as f:
+  File "/home/ssanthoshkum/.local/lib/python3.10/site-packages/h5py/_hl/files.py", line 561, in __init__
+    fid = make_fid(name, mode, userblock_size, fapl, fcpl, swmr=swmr)
+  File "/home/ssanthoshkum/.local/lib/python3.10/site-packages/h5py/_hl/files.py", line 235, in make_fid
+    fid = h5f.open(name, flags, fapl=fapl)
+  File "h5py/_objects.pyx", line 54, in h5py._objects.with_phil.wrapper
+  File "h5py/_objects.pyx", line 55, in h5py._objects.with_phil.wrapper
+  File "h5py/h5f.pyx", line 102, in h5py.h5f.open
+FileNotFoundError: [Errno 2] Unable to synchronously open file (unable to open file: name = 'data/mouse_pancreas_updated_beta_with_pdx1.h5ad', errno = 2, error message = 'No such file or directory', flags = 0, o_flags = 0)
+[Mon May 26 21:26:50 2025]
+Error in rule run_palava_small_lr:
+    jobid: 0
+    output: Out_files_and_results/mouse_pancreas_2k/small_lr_seed=1_lambda=0.5_lambda_marker_genes=0.1_palava_width=25_list_of_nonlin_factors=none/done.txt
+    conda-env: palava-new2-env
+    shell:
+        
+        python run_palava_mouse_pancrease_small_lr.py --lambda_='0.5' --str_ab_exp='mouse_pancreas_2k' --palava_width='25' --list_of_nonlin_factors='none' --lambda_marker_genes='0.1' --seed='1' --dir='small_lr_seed=1_lambda=0.5_lambda_marker_genes=0.1_palava_width=25_list_of_nonlin_factors=none'
+        
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
