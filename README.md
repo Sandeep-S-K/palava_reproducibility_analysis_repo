@@ -1,4 +1,4 @@
-# PALAVA Simulated Data Analysis  
+# PALAVA Data Analysis  
 
 ## Splatter Folder  
 
